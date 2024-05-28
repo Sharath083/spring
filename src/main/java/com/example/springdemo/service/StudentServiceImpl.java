@@ -1,8 +1,8 @@
 package com.example.springdemo.service;
 
 import com.example.springdemo.entity.StudentDetails;
+import com.example.springdemo.exception.ExceptionsHandler;
 import com.example.springdemo.exception.CommonException;
-import com.example.springdemo.exception.NoStudentsException;
 import com.example.springdemo.repository.StudentRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,10 +19,10 @@ public class StudentServiceImpl implements StudentService{
     }
 
     @Override
-    public StudentDetails getStudentData(UUID id) throws CommonException {
+    public StudentDetails getStudentData(UUID id) throws ExceptionsHandler {
         var s=studentRepo.findById(id).orElse(null );
         if(s==null){
-            throw new NoStudentsException("Student with Id "+id+" Does Not Exists" );
+            throw new CommonException("Student with Id "+id+" Does Not Exists" );
         }
         return s;
     }

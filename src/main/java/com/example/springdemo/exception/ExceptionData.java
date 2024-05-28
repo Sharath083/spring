@@ -10,5 +10,4 @@ import lombok.NoArgsConstructor;
 public class ExceptionData {
     private String messageId;
     private String message;
-
 }
