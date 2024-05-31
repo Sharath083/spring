@@ -1,7 +1,9 @@
 package com.example.springdemo.exception;
 
 public class CommonException extends RuntimeException {
-    public CommonException(String message) {
+    String infoId;
+    public CommonException(String infoId,String message) {
         super(message);
+        this.infoId=infoId;
     }
 }
