@@ -1,8 +1,10 @@
-package com.example.springdemo.jwt;
+package com.example.springdemo.config;
 
 import com.example.springdemo.exception.CommonException;
+import com.example.springdemo.jwt.JwtHelper;
+import com.example.springdemo.jwt.JwtRequest;
 import com.example.springdemo.service.CustomStudentService;
-import com.example.springdemo.service.UserService;
+
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -35,7 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public void doFilterInternal(HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull FilterChain filterChain) throws ServletException, IOException {
         String requestHeader = request.getHeader("Authorization");
         String username = null;
-        JwtRequest jwtRequest=null;
+        JwtRequest jwtRequest;
 
         if (requestHeader != null && requestHeader.startsWith("Bearer ")) {
             token = requestHeader.substring(7);

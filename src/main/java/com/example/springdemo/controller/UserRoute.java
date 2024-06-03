@@ -1,11 +1,14 @@
 package com.example.springdemo.controller;
 
+import com.example.springdemo.config.MyConfig;
 import com.example.springdemo.dto.AuthRequest;
 import com.example.springdemo.dto.UserReq;
 import com.example.springdemo.entity.UserDetails;
 import com.example.springdemo.helper.HelperFunctions;
 import com.example.springdemo.jwt.JwtHelper;
 import com.example.springdemo.jwt.JwtRequest;
+import com.example.springdemo.redisConfig.RedisHelper;
+import com.example.springdemo.redisConfig.RedisSessionAuthenticationFilter;
 import com.example.springdemo.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,13 +28,16 @@ public class UserRoute {
     private UserDetailsService userDetailsService;
     @Autowired
     private JwtHelper jwtHelper;
+    @Autowired
+    private MyConfig myConfig;
+    @Autowired
+    private RedisHelper redisHelper;
 
-    @PostMapping("/login")
+    @PostMapping("/login1")
     public HashMap<String,String> authenticateStudent(@RequestBody AuthRequest request){
 
         JwtRequest details = userService.getUserIdAndName(request.getUsername());
         helperFunctions.doAuthentication(request.getUsername(),details.getUserId());
-        System.out.println("in router login");
         org.springframework.security.core.userdetails.UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
         String token = jwtHelper.generateToken(userDetails.getUsername(),details.getUserId());
         HashMap<String,String> map=new HashMap<>();
@@ -39,6 +45,15 @@ public class UserRoute {
         return map;
 
     }
+    @PostMapping("/login")
+    public HashMap<String,String> tokenGeneration(@RequestBody AuthRequest request){
+        var id=userService.getUserIdAndName(request.getUsername()).getUserId();
+        var token=myConfig.generateRedisToken(id,request.getUsername());
+        HashMap<String,String> map=new HashMap<>();
+        map.put("token",token);
+        return map;
+    }
+
     @PostMapping("/signup")
     public UserDetails signUp(@RequestBody @Valid UserReq req){
         return userService.signUp(req);
@@ -49,7 +64,6 @@ public class UserRoute {
     }
     @GetMapping("/name")
     public UserDetails getUserById(@RequestBody AuthRequest request){
-        System.out.println("in getUserByName");
-        return userService.getUser(request.getUsername());
+        return userService.getUser(RedisSessionAuthenticationFilter.getUserData().getUserId());
     }
 }

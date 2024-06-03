@@ -11,6 +11,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 public class CustomStudentService implements UserDetailsService {
 //    @Autowired
@@ -22,19 +24,19 @@ public class CustomStudentService implements UserDetailsService {
     UserRepo userRepo;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-            var userData=userRepo.findByName(username);
-            if (userData == null) {
-                throw new UsernameNotFoundException("User not found with username: " + username);
-            }
-        String encodedPassword = passwordEncoder.encode(userData.getId().toString());
-        System.out.println("--------------in load------------------"+encodedPassword);
-
-        return User
-                .withUsername(username)
-                .password(encodedPassword)
-                .roles("USER")
-                .build();
+    public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
+        var userData = userRepo.findById(UUID.fromString(userId)).orElse(null);
+//        var userData=userRepo.findByName(username);
+        if (userData == null) {
+            throw new UsernameNotFoundException("User not found with id: " + userId);
+        } else {
+            String encodedPassword = passwordEncoder.encode(userData.getId().toString());
+            return User
+                    .withUsername(userData.getName())
+                    .password(encodedPassword)
+                    .roles("USER")
+                    .build();
         }
+    }
 
 }
