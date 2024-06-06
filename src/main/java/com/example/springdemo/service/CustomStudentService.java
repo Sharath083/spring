@@ -15,8 +15,6 @@ import java.util.UUID;
 
 @Service
 public class CustomStudentService implements UserDetailsService {
-//    @Autowired
-//    private StudentRepository studentRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -26,7 +24,6 @@ public class CustomStudentService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
         var userData = userRepo.findById(UUID.fromString(userId)).orElse(null);
-//        var userData=userRepo.findByName(username);
         if (userData == null) {
             throw new UsernameNotFoundException("User not found with id: " + userId);
         } else {

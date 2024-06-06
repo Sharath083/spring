@@ -1,10 +1,8 @@
 package com.example.springdemo.redisConfig;
 
 import com.example.springdemo.contants.Constants;
-import com.example.springdemo.exception.SessionException;
 import com.example.springdemo.helper.Crypto;
 import com.example.springdemo.jwt.JwtRequest;
-import com.example.springdemo.exception.CommonException;
 import com.example.springdemo.service.CustomStudentService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -42,8 +40,9 @@ public class RedisSessionAuthenticationFilter extends OncePerRequestFilter {
 
         if (sessionId != null) {
             try {
-                jwtRequest = validateSession(sessionId);
+
                 UserDetails userDetails = userService.loadUserByUsername(jwtRequest.getUserId());
+                jwtRequest = validateSession(sessionId,userDetails);
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
@@ -58,21 +57,20 @@ public class RedisSessionAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private JwtRequest validateSession(String session) throws AuthenticationException {
+    private JwtRequest validateSession(String session,UserDetails userDetails) throws AuthenticationException {
         try {
             String[] data = crypto.decrypt(session).split("//");
             String key = Constants.REDIS_KEY + data[0];
             String value = redisHelper.get(key);
             if (value == null) {
-                throw new SessionException("Session Expired") {};
-            } else if (!value.equals(session)) {
-                throw new SessionException("Invalid session key") {};
+                throw new AuthenticationException("Session Expired") {};
+            } else if (value.equals(session) && data[1].equals(userDetails.getUsername())) {
+                return new JwtRequest(data[0], data[1]);
             }
-            return new JwtRequest(data[0], data[1]);
-        } catch (IllegalArgumentException e) {
-            throw new SessionException("Invalid session key") {
+            throw new AuthenticationException("Invalid session key") {};
 
-            };
+        } catch (IllegalArgumentException e) {
+            throw new AuthenticationException("Invalid session key") {};
         }
     }
 

@@ -64,7 +64,6 @@ public class JwtHelper {
     }
 
     private String doGenerateToken(Map<String, Object> claims, JwtRequest subject) {
-        System.out.println("------------------> in do generate token");
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(gson.toJson(subject))
