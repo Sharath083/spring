@@ -66,9 +66,10 @@ public class RedisSessionAuthenticationFilter extends OncePerRequestFilter {
                 throw new AuthenticationException("Session Expired") {};
             } else if (value.equals(session) && data[1].equals(userDetails.getUsername())) {
                 return new JwtRequest(data[0], data[1]);
+            }else {
+                throw new AuthenticationException("Invalid session key") {
+                };
             }
-            throw new AuthenticationException("Invalid session key") {};
-
         } catch (IllegalArgumentException e) {
             throw new AuthenticationException("Invalid session key") {};
         }
