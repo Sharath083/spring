@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Objects;
 
 @Component
 public class RedisSessionAuthenticationFilter extends OncePerRequestFilter {
@@ -40,9 +41,11 @@ public class RedisSessionAuthenticationFilter extends OncePerRequestFilter {
 
         if (sessionId != null) {
             try {
-
+                jwtRequest = validateSession(sessionId);
                 UserDetails userDetails = userService.loadUserByUsername(jwtRequest.getUserId());
-                jwtRequest = validateSession(sessionId,userDetails);
+                if(!Objects.equals(userDetails.getUsername(), jwtRequest.getUsername())) {
+                    throw new AuthenticationException("Session is Invalid") {};
+                }
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
@@ -57,14 +60,14 @@ public class RedisSessionAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private JwtRequest validateSession(String session,UserDetails userDetails) throws AuthenticationException {
+    private JwtRequest validateSession(String session) throws AuthenticationException {
         try {
             String[] data = crypto.decrypt(session).split("//");
             String key = Constants.REDIS_KEY + data[0];
             String value = redisHelper.get(key);
             if (value == null) {
                 throw new AuthenticationException("Session Expired") {};
-            } else if (value.equals(session) && data[1].equals(userDetails.getUsername())) {
+            } else if (value.equals(session)) {
                 return new JwtRequest(data[0], data[1]);
             }else {
                 throw new AuthenticationException("Invalid session key") {
